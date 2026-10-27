@@ -1,0 +1,12 @@
+services:
+  windsight:
+    build: .
+    image: windsight
+    ports:
+      - "8000:8000"
+    volumes:
+      - windsight-data:/data
+    restart: unless-stopped
+
+volumes:
+  windsight-data:
