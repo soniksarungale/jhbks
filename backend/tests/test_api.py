@@ -86,3 +86,18 @@ def test_export_csv(client):
     lines = r.text.strip().splitlines()
     assert lines[0].startswith("decision_day,publish_time_utc,target_time_utc")
     assert len(lines) == 49
+
+
+def test_serves_frontend_with_spa_fallback(settings, populated_db, tmp_path):
+    static = tmp_path / "static"
+    (static / "assets").mkdir(parents=True)
+    (static / "index.html").write_text("<html>app</html>")
+    (static / "favicon.svg").write_text("<svg/>")
+    settings.static_dir = static
+
+    with TestClient(create_app(settings)) as c:
+        assert c.get("/").text == "<html>app</html>"
+        assert c.get("/favicon.svg").text == "<svg/>"
+        assert c.get("/some/deep/link").text == "<html>app</html>"
+        assert c.get("/..%2f..%2fetc/passwd").text == "<html>app</html>"
+        assert c.get("/api/nope").status_code == 404
