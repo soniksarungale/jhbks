@@ -7,6 +7,7 @@ export const colors = {
   forecast: '#2a78d6',
   actual: '#eb6834',
   band: 'rgba(42, 120, 214, 0.14)',
+  bandKey: 'rgba(42, 120, 214, 0.4)',
   vintage: '#b9b8b0',
   ink: '#0b0b0b',
   ink2: '#52514e',
@@ -79,6 +80,8 @@ function band(name: string, points: [number, number | null, number | null][]): S
       name: `${name} (base)`,
       type: 'line',
       stack: name,
+      // 'all' so a negative lower bound still offsets the band (errors can be < 0)
+      stackStrategy: 'all',
       symbol: 'none',
       lineStyle: { opacity: 0 },
       silent: true,
@@ -89,8 +92,10 @@ function band(name: string, points: [number, number | null, number | null][]): S
       name,
       type: 'line',
       stack: name,
+      stackStrategy: 'all',
       symbol: 'none',
       lineStyle: { opacity: 0 },
+      itemStyle: { color: colors.bandKey },
       areaStyle: { color: colors.band },
       silent: true,
       data: points.map(([x, lo, hi]) => [x, lo == null || hi == null ? null : hi - lo]),
@@ -162,17 +167,20 @@ export function decisionChart(d: Decision, opts: DecisionChartOptions): EChartsO
       formatter: (params) => {
         const list = Array.isArray(params) ? params : [params]
         const x = Number((list[0]?.value as [number, number])?.[0])
-        const p = byX.get(x)
+        const hour = x - (x % 3_600_000)
+        const p = byX.get(hour)
         const rows: Row[] = []
         if (p) {
-          rows.push({ label: 'Forecast', value: mw(p.forecast), color: colors.forecast })
+          const label = hour === x ? 'Forecast' : `Forecast (${hhmm(hour)})`
+          rows.push({ label, value: mw(p.forecast), color: colors.forecast })
           if (p.p10 != null && p.p90 != null)
             rows.push({ label: 'Likely range', value: `${compact(p.p10)}–${compact(p.p90)} MW` })
         }
         const a = actualByX.get(x)
         if (opts.showActuals && a != null) {
           rows.push({ label: 'Actual', value: mw(a), color: colors.actual })
-          if (p) rows.push({ label: 'Error (fcst − actual)', value: signedMw(p.forecast - a) })
+          if (p && hour === x)
+            rows.push({ label: 'Error (fcst − actual)', value: signedMw(p.forecast - a) })
         }
         if (p) rows.push({ label: 'Lead time', value: `${p.lead_h.toFixed(1)} h` })
         return tooltipHtml(hhmm(x), rows)
@@ -182,7 +190,7 @@ export function decisionChart(d: Decision, opts: DecisionChartOptions): EChartsO
       ...timeAxis,
       axisLabel: { ...timeAxis.axisLabel, formatter: '{HH}:{mm}' },
     },
-    yAxis: { ...valueAxis('MW'), min: 0 },
+    yAxis: { ...valueAxis(), min: 0 },
     series,
   }
 }
@@ -218,7 +226,7 @@ export function dailyEnergyChart(a: Accuracy): EChartsOption {
         formatter: (v: string) => formatDay(v).split(' ').slice(1).join(' '),
       },
     },
-    yAxis: { ...valueAxis('GWh'), axisLabel: { color: colors.muted, formatter: (v: number) => compact(v / 1000) } },
+    yAxis: { ...valueAxis(), axisLabel: { color: colors.muted, formatter: (v: number) => compact(v / 1000) } },
     series: [
       {
         name: 'Forecast at decision',
@@ -266,7 +274,7 @@ export function hourOfDayChart(a: Accuracy): EChartsOption {
       axisTick: { show: false },
       axisLabel: { color: colors.muted, interval: 2 },
     },
-    yAxis: valueAxis('MW'),
+    yAxis: valueAxis(),
     series: [
       {
         name: 'Bias (mean error)',
@@ -291,7 +299,7 @@ export function hourOfDayChart(a: Accuracy): EChartsOption {
 export function histogramChart(a: Accuracy): EChartsOption {
   return {
     ...base,
-    grid: { ...base.grid, top: 24 },
+    grid: { ...base.grid, top: 24, bottom: 28 },
     tooltip: {
       ...base.tooltip,
       trigger: 'item',
@@ -445,7 +453,7 @@ export function leadTimeChart(curve: LeadStat[], decisionLeads?: [number, number
       axisLabel: { color: colors.muted },
       splitLine: { show: false },
     },
-    yAxis: valueAxis('MW'),
+    yAxis: valueAxis(),
     grid: { ...base.grid, bottom: 24 },
     series,
   }
@@ -477,7 +485,7 @@ export function horizonChart(h: Horizon): EChartsOption {
       ...timeAxis,
       axisLabel: { ...timeAxis.axisLabel, formatter: '{d} {MMM}' },
     },
-    yAxis: { ...valueAxis('MW'), min: 0 },
+    yAxis: { ...valueAxis(), min: 0 },
     dataZoom: [{ type: 'inside', filterMode: 'none' }],
     series: [
       {

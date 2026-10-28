@@ -38,7 +38,7 @@ export function LeadTimeView({ cutoff, hours, onHoursChange }: Props) {
       {curveOption && (
         <Card
           title="How accuracy changes with lead time"
-          subtitle="Every forecast published for January delivery, grouped by how far ahead it was made. The shaded zone is the earliest lead time of a forecast used at your cutoff (later hours of the delivery day sit further right)."
+          subtitle="Error in MW of every forecast published for January delivery, grouped by how far ahead it was made. The shaded zone is the earliest lead time of a forecast used at your cutoff (later hours of the delivery day sit further right)."
         >
           <Chart option={curveOption} height={320} label="Forecast error against lead time" />
         </Card>
@@ -46,7 +46,7 @@ export function LeadTimeView({ cutoff, hours, onHoursChange }: Props) {
 
       <Card
         title="Forecast at a fixed horizon"
-        subtitle="For each hour, the latest forecast published at least this long before it."
+        subtitle="Hourly MW. For each hour, the latest forecast published at least this long before it."
         actions={
           <label className="slider">
             <span className="muted">Horizon</span>

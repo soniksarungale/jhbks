@@ -48,13 +48,13 @@ export function AccuracyView({ cutoff, onOpenDay }: { cutoff: string; onOpenDay:
 
           <Card
             title="Daily energy: forecast at decision vs actual"
-            subtitle={`Forecast available at ${cutoff} each day, compared with what the wind actually produced the next day.`}
+            subtitle={`GWh per delivery day. Forecast available at ${cutoff} each day, compared with what the wind actually produced the next day.`}
           >
             <Chart option={charts.daily} height={300} label="Daily forecast and actual wind energy" />
           </Card>
 
           <div className="grid-2">
-            <Card title="Error by hour of day" subtitle="Bias and average miss for each delivery hour, UK time.">
+            <Card title="Error by hour of day" subtitle="Bias and average miss in MW for each delivery hour, UK time.">
               <Chart option={charts.hour} height={280} label="Forecast error by hour of day" />
             </Card>
             <Card title="How big are the misses?" subtitle={`All ${a.summary.n} hourly errors, in 500 MW bins.`}>

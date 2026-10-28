@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SeriesOption } from 'echarts'
 import type { Decision } from '../api'
-import { decisionChart } from './charts'
+import { decisionChart, leadTimeChart } from './charts'
 
 const decision: Decision = {
   decision_day: '2026-01-15',
@@ -44,5 +44,15 @@ describe('decisionChart', () => {
     expect(names(all)).toContain('Earlier forecasts')
     expect(names(bare)).not.toContain('Actual')
     expect(names(bare)).not.toContain('Earlier forecasts')
+  })
+})
+
+describe('leadTimeChart', () => {
+  it('stacks the error band across zero', () => {
+    const curve = [{ lead_h: 0, mae: 500, rmse: 600, bias: 100, p10: -300, p90: 900, n: 10 }]
+    const [lower, width] = leadTimeChart(curve).series as SeriesOption[]
+    // With the default 'samesign' stacking a negative base would not offset the band.
+    expect(lower).toMatchObject({ stackStrategy: 'all', data: [[0, -300]] })
+    expect(width).toMatchObject({ stackStrategy: 'all', data: [[0, 1200]] })
   })
 })

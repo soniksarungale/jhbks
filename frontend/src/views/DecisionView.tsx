@@ -83,7 +83,7 @@ export function DecisionView({ meta, day, cutoff, onDayChange }: Props) {
       {d && option && (
         <Card
           title={`Wind forecast for ${formatDay(d.delivery_day)}`}
-          subtitle="Hourly national wind generation, UK time. The shaded range is where 8 in 10 outcomes landed for forecasts made this far ahead, using only errors already known at the decision time."
+          subtitle="Hourly national wind generation in MW, UK time. The shaded range is where 8 in 10 outcomes landed for forecasts made this far ahead, using only errors already known at the decision time."
           actions={
             <>
               <Toggle checked={showVintages} onChange={setShowVintages}>
